@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import PropTypes from "prop-types";
+import { db } from "../firebase/config";
+import { collection, addDoc } from "firebase/firestore";
 
 export default function WaitlistModal({ onClose }) {
   const [form, setForm] = useState({
@@ -40,25 +42,15 @@ export default function WaitlistModal({ onClose }) {
     }
 
     try {
-      const res = await fetch("http://localhost:5000/api/waitlist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setStatus("success");
-        setMessage("");
-        setTimeout(() => {
-          window.location = `/dashboard?name=${encodeURIComponent(form.fullName)}`;
-        }, 1200);
-      } else {
-        setStatus("error");
-        setMessage(data.error || "Something went wrong!");
-      }
-    } catch {
+      await addDoc(collection(db, "waitlist"), form);
+      setStatus("success");
+      setMessage("");
+      setTimeout(() => {
+        window.location = `/dashboard?name=${encodeURIComponent(form.fullName)}`;
+      }, 1200);
+    } catch (error) {
       setStatus("error");
-      setMessage("Network error.");
+      setMessage(`Something went wrong! ${error}`);
     }
   };
 
